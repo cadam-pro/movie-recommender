@@ -14,10 +14,10 @@ from pyspark.ml.feature import (
     IDF,
     VectorAssembler,
     StandardScaler,
+    Normalizer,
 )
 from functools import reduce
 
-from utils import build_spark_session
 from params import DATA_PATH, CHECK_DUPLICATION_FEATURES
 
 
@@ -165,7 +165,7 @@ def change_column_types(df: DataFrame) -> DataFrame:
     )
 
 
-def clean_data(df):
+def clean_data(df: DataFrame) -> DataFrame:
     """
     Clean the movie dataset.
 
@@ -230,8 +230,10 @@ def clean_data(df):
 
     print("Data cleaned successfully.")
 
+    return df
 
-def prepare_data(df):
+
+def prepare_data(df: DataFrame) -> DataFrame:
     """
     Prepare the movie dataset.
 
@@ -309,9 +311,38 @@ def prepare_data(df):
         ]
     )
     pipeline_model = pipeline.fit(df)
-    df = pipeline_model.transform(df)
+    df_vec = pipeline_model.transform(df)
     print("Pipeline fitted and data transformed.")
-    return df
+
+    df_vec = df_vec.drop(
+        "release_year_vec", "overview_tokens", "overview_filtered", "overview_tf"
+    )
+
+    final_assembler = VectorAssembler(
+        inputCols=[
+            "genres_vector",
+            "production_countries_vector",
+            "production_companies_vector",
+            "spoken_languages_vector",
+            "cast_vector",
+            "director_vector",
+            "writers_vector",
+            "original_language_vector",
+            "release_year_scaled",
+            "overview_vector",
+        ],
+        outputCol="content_features",
+    )
+
+    df_vec_assembler = final_assembler.transform(df_vec)
+    print("Final features assembled.")
+
+    normalizer = Normalizer(
+        inputCol="content_features", outputCol="norm_features", p=2.0
+    )
+    print("Normalizer created.")
+
+    return normalizer.transform(df_vec_assembler)
 
 
 def save_data(df, path):
@@ -324,10 +355,3 @@ def save_data(df, path):
         df: The prepared movie dataset.
     """
     pass
-
-
-if __name__ == "__main__":
-    spark = build_spark_session()
-    df = load_data(spark)
-    df = clean_data(df)
-    df = prepare_data(df)
