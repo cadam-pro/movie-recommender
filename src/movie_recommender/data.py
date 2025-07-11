@@ -5,6 +5,16 @@ Load, preprocess, prepare, and save the Movie dataset.
 from pyspark.sql import SparkSession, DataFrame
 from pyspark.sql.functions import col, when, split, array, year, size, row_number
 from pyspark.sql import Window
+from pyspark.ml import Pipeline
+from pyspark.ml.feature import (
+    CountVectorizer,
+    Tokenizer,
+    StopWordsRemover,
+    HashingTF,
+    IDF,
+    VectorAssembler,
+    StandardScaler,
+)
 from functools import reduce
 
 from utils import build_spark_session
@@ -143,7 +153,7 @@ def change_column_types(df: DataFrame) -> DataFrame:
         )
     )
 
-    df = df.drop(
+    return df.drop(
         "genres",
         "production_countries",
         "production_companies",
@@ -153,8 +163,6 @@ def change_column_types(df: DataFrame) -> DataFrame:
         "writers",
         "original_language",
     )
-
-    return df
 
 
 def clean_data(df):
@@ -233,7 +241,77 @@ def prepare_data(df):
     Returns:
         dataframe: A prepared Spark DataFrame ready for analysis.
     """
-    pass
+    # use CountVectorizer to vectorize the genres, production_countries, production_companies, spoken_languages, cast, director, writers columns and original_language
+    vectorizer_genres = CountVectorizer(
+        inputCol="genres_array", outputCol="genres_vector"
+    )
+    vectorizer_production_countries = CountVectorizer(
+        inputCol="production_countries_array", outputCol="production_countries_vector"
+    )
+    vectorizer_production_companies = CountVectorizer(
+        inputCol="production_companies_array", outputCol="production_companies_vector"
+    )
+    vectorizer_spoken_languages = CountVectorizer(
+        inputCol="spoken_languages_array", outputCol="spoken_languages_vector"
+    )
+    vectorizer_cast = CountVectorizer(inputCol="cast_array", outputCol="cast_vector")
+    vectorizer_director = CountVectorizer(
+        inputCol="director_array", outputCol="director_vector"
+    )
+    vectorizer_writers = CountVectorizer(
+        inputCol="writers_array", outputCol="writers_vector"
+    )
+    vectorizer_original_language = CountVectorizer(
+        inputCol="original_language_array", outputCol="original_language_vector"
+    )
+    print("Vectorizers created.")
+
+    # Overview vectorization pipeline
+    # 1. Tokenisation
+    tokenizer = Tokenizer(inputCol="overview", outputCol="overview_tokens")
+    # 2. delete empty words
+    remover = StopWordsRemover(
+        inputCol="overview_tokens", outputCol="overview_filtered"
+    )
+    # 3. TF
+    hashingTF = HashingTF(
+        inputCol="overview_filtered", outputCol="overview_tf", numFeatures=10000
+    )
+    # 4. IDF
+    idf = IDF(inputCol="overview_tf", outputCol="overview_vector")
+    print("Overview vectorization pipeline created.")
+
+    # scale the release_year
+    release_year_assembler = VectorAssembler(
+        inputCols=["release_year"], outputCol="release_year_vec", handleInvalid="keep"
+    )
+    release_year_scaler = StandardScaler(
+        inputCol="release_year_vec", outputCol="release_year_scaled"
+    )
+    print("Release year scaling pipeline created.")
+
+    pipeline = Pipeline(
+        stages=[
+            tokenizer,
+            remover,
+            hashingTF,
+            idf,
+            vectorizer_genres,
+            vectorizer_production_countries,
+            vectorizer_production_companies,
+            vectorizer_spoken_languages,
+            vectorizer_cast,
+            vectorizer_director,
+            vectorizer_writers,
+            vectorizer_original_language,
+            release_year_assembler,
+            release_year_scaler,
+        ]
+    )
+    pipeline_model = pipeline.fit(df)
+    df = pipeline_model.transform(df)
+    print("Pipeline fitted and data transformed.")
+    return df
 
 
 def save_data(df, path):
@@ -252,3 +330,4 @@ if __name__ == "__main__":
     spark = build_spark_session()
     df = load_data(spark)
     df = clean_data(df)
+    df = prepare_data(df)
