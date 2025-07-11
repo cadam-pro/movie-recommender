@@ -202,7 +202,7 @@ print("End read csv")
 def get_last_movies_change():
    id_movies = []
    # page max 500 : api limitation to page 500
-   for page in range(1, 10):
+   for page in range(1, 500):
       data = call_api(CHANGE_URL, {
         "page": page
       })
