@@ -14,6 +14,8 @@ def build_spark_session() -> SparkSession:
         .getOrCreate()
     )
 
+    print("Spark session created.")
+
     return spark
 
 

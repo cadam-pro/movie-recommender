@@ -3,11 +3,12 @@ Load, preprocess, prepare, and save the Movie dataset.
 """
 
 from pyspark.sql import SparkSession, DataFrame
-from pyspark.sql.functions import col, when, split, array, year
+from pyspark.sql.functions import col, when, split, array, year, size, row_number
+from pyspark.sql import Window
 from functools import reduce
 
 from utils import build_spark_session
-from params import DATA_PATH
+from params import DATA_PATH, CHECK_DUPLICATION_FEATURES
 
 
 def load_data(spark: SparkSession) -> DataFrame:
@@ -28,6 +29,8 @@ def load_data(spark: SparkSession) -> DataFrame:
         escape='"',
         multiLine=True,
     )
+
+    print("Data loaded successfully.")
 
     return df
 
@@ -164,7 +167,60 @@ def clean_data(df):
     Returns:
         dataframe: A cleaned Spark DataFrame.
     """
-    pass
+    df = add_completeness_score_column(df)
+    print("Completeness score column added.")
+    df = change_column_types(df)
+    print("Column types changed successfully.")
+    # remove movies not released
+    df = df.filter(df["status"] == "Released")
+    # drop columns that are not useful for the calculation
+    df = df.drop(
+        "status",
+        "imdb_id",
+        "tagline",
+        "director_of_photography",
+        "producers",
+        "imdb_rating",
+        "imdb_votes",
+        "music_composer",
+        "revenue",
+    )
+    # drop rows that have no title
+    df = df.filter(df["title"].isNotNull() & (df["title"] != ""))
+    # replace null values in overview with empty string and release_year with median year
+    median_year = df.approxQuantile("release_year", [0.5], 0.01)[0]
+    df = df.fillna({"overview": "", "release_year": median_year})
+    # drop rows who have completeness_score < 4
+    df = df.filter(df["completeness_score"] >= 4)
+    # drop rows with release_date, production_companies, production_countries, spoken_languages, cast, director, writers, overview and genres null
+    df = df.filter(
+        ~(
+            df.release_date.isNull()
+            & df.overview.isNull()
+            & (size(col("production_companies_array")) == 0)
+            & (size(col("production_countries_array")) == 0)
+            & (size(col("spoken_languages_array")) == 0)
+            & (size(col("cast_array")) == 0)
+            & (size(col("director_array")) == 0)
+            & (size(col("writers_array")) == 0)
+            & (size(col("genres_array")) == 0)
+        )
+    )
+
+    for col_name in CHECK_DUPLICATION_FEATURES:
+        # check for duplicate titles with release_date and overview, and delete the line with the lowest completeness_score
+        window = Window.partitionBy("title", col_name).orderBy(
+            col("completeness_score").desc()
+        )
+
+        # Keep the most complete line
+        df = (
+            df.withColumn("row_num", row_number().over(window))
+            .filter(col("row_num") == 1)
+            .drop("row_num")
+        )
+
+    print("Data cleaned successfully.")
 
 
 def prepare_data(df):
@@ -194,11 +250,5 @@ def save_data(df, path):
 
 if __name__ == "__main__":
     spark = build_spark_session()
-    print("Spark session created.")
     df = load_data(spark)
-    print("Data loaded successfully.")
-    df = add_completeness_score_column(df)
-    print("Completeness score column added.")
-    df = change_column_types(df)
-    print(df.printSchema())
-    print("Column types changed successfully.")
+    df = clean_data(df)
