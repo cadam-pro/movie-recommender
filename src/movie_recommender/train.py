@@ -45,7 +45,7 @@ def train(df: DataFrame, movie_id: int) -> DataFrame:
 
 def get_top_recommendations(df: DataFrame, movie_id: int) -> DataFrame:
     """
-    Get the top 20 movie recommendations based on cosine similarity.
+    Get the movie recommendations based on cosine similarity.
     Args:
         df (DataFrame): The DataFrame containing movie data with cosine similarity scores.
         target_id (int): The ID of the target movie for recommendations.
@@ -57,12 +57,14 @@ def get_top_recommendations(df: DataFrame, movie_id: int) -> DataFrame:
         .orderBy(col("cosine_similarity").desc())
         .limit(20)
     )
+    print("Get the top 20 movie recommendations based on cosine similarity")
 
     popular = top_20.orderBy(col("popularity").desc()).limit(1).toJSON()
+    print("Get the most popular movie recommended")
     underground = top_20.orderBy(col("popularity").asc()).limit(1).toJSON()
+    print("Get the most underground movie recommended")
     newest = top_20.orderBy(col("release_date").desc()).limit(1).toJSON()
-
-    # top_20.show(truncate=True)
+    print("Get the newest movie recommended")
 
     return {
         "popular": popular.collect(),
