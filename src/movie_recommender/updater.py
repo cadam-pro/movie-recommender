@@ -22,7 +22,7 @@ import time
 from dotenv import load_dotenv
 from pyspark.sql import DataFrame
 from params import API_KEY, CSV_PATH_LOAD, CHANGE_URL, GET_MOVIE_URL, URL_IMDB, CSV_PATH_SAVE
-from registry import load_data, create_save, cleanup_temp_files
+from registry import load_data, save_data, cleanup_temp_files
 from mapper_movie import map_cast, map_crew, update_cast, update_crew, update_genre, update_production_company, update_release_date, update_tagline
 from session_updater import call_api
 from http_requester import get_update, get_tmdb_movie_ids, get_movie, get_imdb_rating
@@ -263,13 +263,13 @@ def principal_methode():
 
     #step 2
     df_update = retrieve_updates()
-    create_save(df_update, "update")
+    save_data(df_update, "update")
 
     #step 3
     new_movies_ids = list_new_movies_ids(today_str, yesterday_str)
     df_new_movies = map_movies(get_movies(new_movies_ids))
     df_new_movies_with_imdb_rating = associate_imdb_rating(df_new_movies)
-    create_save(df_new_movies_with_imdb_rating, "news")
+    save_data(df_new_movies_with_imdb_rating, "news")
 
     #step 4
     df_movie = load_data("data")
@@ -277,7 +277,7 @@ def principal_methode():
     df_new_movies_with_imdb_rating = load_data("news")
     df_movie_with_update = apply_update(df_movie, df_update)
     final_df_updated_and_with_new_movies = df_movie_with_update.unionByName(df_new_movies_with_imdb_rating)
-    create_save(final_df_updated_and_with_new_movies, "data")
+    save_data(final_df_updated_and_with_new_movies, "data")
     
 
 principal_methode()
