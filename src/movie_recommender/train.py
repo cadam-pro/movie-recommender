@@ -1,3 +1,4 @@
+import json
 from utils import build_spark_session
 from data import load_data, clean_data, prepare_data
 from pyspark.sql.functions import col
@@ -43,7 +44,7 @@ def train(df: DataFrame, movie_id: int) -> DataFrame:
     return df_with_similarity
 
 
-def get_top_recommendations(df: DataFrame, movie_id: int) -> DataFrame:
+def get_top_recommendations(df: DataFrame, movie_id: int):
     """
     Get the movie recommendations based on cosine similarity.
     Args:
@@ -59,17 +60,32 @@ def get_top_recommendations(df: DataFrame, movie_id: int) -> DataFrame:
     )
     print("Get the top 20 movie recommendations based on cosine similarity")
 
-    popular = top_20.orderBy(col("popularity").desc()).limit(1).toJSON()
+    # Collecter les données une fois pour toutes
+    top_20_list = top_20.collect()
+    print("Collected top 20 movies")
+
+    # Transformer en dicts Python
+    top_20_dicts = [row.asDict() for row in top_20_list]
+
+    # Popularité max
+    popular = max(top_20_dicts, key=lambda x: x["popularity"])
     print("Get the most popular movie recommended")
-    underground = top_20.orderBy(col("popularity").asc()).limit(1).toJSON()
+
+    # Popularité min
+    underground = min(top_20_dicts, key=lambda x: x["popularity"])
     print("Get the most underground movie recommended")
-    newest = top_20.orderBy(col("release_date").desc()).limit(1).toJSON()
+
+    # Sortie la plus récente
+    newest = max(
+        (movie for movie in top_20_dicts if movie["release_date"] is not None),
+        key=lambda x: x["release_date"],
+    )
     print("Get the newest movie recommended")
 
     return {
-        "popular": popular.collect(),
-        "underground": underground.collect(),
-        "newest": newest.collect(),
+        "popular": json.dumps(popular, default=str),
+        "underground": json.dumps(underground, default=str),
+        "newest": json.dumps(newest, default=str),
     }
 
 
