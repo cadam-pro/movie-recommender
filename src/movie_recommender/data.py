@@ -2,6 +2,7 @@
 Load, preprocess, prepare, and save the Movie dataset.
 """
 
+from registry import load_and_merge_data, save_merged_data, save_cleaned_data
 from pyspark.sql import SparkSession, DataFrame
 from pyspark.sql.functions import col, when, split, array, year, size, row_number
 from pyspark.sql import Window
@@ -21,29 +22,21 @@ from functools import reduce
 from params import DATA_PATH, CHECK_DUPLICATION_FEATURES
 
 
-def load_data(spark: SparkSession) -> DataFrame:
-    """
-    To be completed with Alpha and Clément's code.
-
-    Load the movie dataset.
-
-    Returns:
-        dataframe: A Spark DataFrame containing the movie dataset.
-    """
-    df = spark.read.csv(
-        DATA_PATH,
-        header=True,
-        inferSchema=True,
-        sep=",",
-        quote='"',
-        escape='"',
-        multiLine=True,
-    )
-
+def load_data():
+    df, spark = load_and_merge_data()
+    if df is None:
+        print("❌ Failed to load data.")
+        return None
+            
     print("Data loaded successfully.")
+    return df, spark
 
-    return df
-
+def save_data(df):
+    if df is not None:
+        save_merged_data(df)
+        return df
+    else:
+        return None
 
 def add_completeness_score_column(df: DataFrame) -> DataFrame:
     """
@@ -232,6 +225,12 @@ def clean_data(df: DataFrame) -> DataFrame:
 
     return df
 
+def save_dataframe_to_gcs(df):
+    if df is not None:
+        save_cleaned_data(df)
+        return df
+    else:
+        return None
 
 def prepare_data(df: DataFrame) -> DataFrame:
     """
@@ -345,7 +344,7 @@ def prepare_data(df: DataFrame) -> DataFrame:
     return normalizer.transform(df_vec_assembler)
 
 
-def save_data(df, path):
+# def save_data(df, path):
     """
     To be completed with Alpha's code.
 
@@ -355,3 +354,27 @@ def save_data(df, path):
         df: The prepared movie dataset.
     """
     pass
+
+if __name__ == "__main__":
+
+    # Étape 1 : Charger les données
+    df, spark = load_data()
+    if df is None:
+        print("❌ Impossible de charger les données.")
+        exit()
+
+    # Étape 2 : Nettoyage
+    df_cleaned = clean_data(df)
+    print("✅ Données nettoyées.")
+    df_cleaned.show(5)
+
+    # Étape 4 : Sauvegarde (optionnelle)
+    save_dataframe_to_gcs(df_cleaned)
+    print("✅ Données nettoyées sauvegardées dans GCS.")
+
+    # Étape 3 : Préparation (vectorisation, normalisation)
+    df_prepared = prepare_data(df_cleaned)
+    print("✅ Données préparées et vectorisées.")
+    df_prepared.select("norm_features").show(5, truncate=False)
+
+    spark.stop()

@@ -6,7 +6,9 @@ from dotenv import load_dotenv
 from pyspark.sql import SparkSession
 from google.cloud import storage
 from pyspark.sql.types import StringType
-from pyspark.sql.functions import col
+# from pyspark.sql.functions import col
+from pyspark.sql.functions import col, concat_ws
+
 
 def validate_environment():
     """Valide les variables d'environnement nécessaires"""
@@ -99,7 +101,7 @@ def copy_final_file(bucket, temp_prefix, final_path):
         print(f"❌ Erreur lors de la copie du fichier final : {e}")
         return False
 
-def load_data():
+def load_and_merge_data():
     """Fonction principale pour charger et fusionner les données"""
     print("📦 Chargement des variables d'environnement")
     load_dotenv()
@@ -119,24 +121,20 @@ def load_data():
     
     # Définition des chemins
     gcs_path = f"gs://{bucket_name}/{source_blob}"
+    local_path = "data/test.csv"
     temp_path = f"gs://{bucket_name}/temp/csv_output/"
     final_path = "movies_recommender.csv"
-    local_path = "data/test.csv"
-    
-    # Vérification de l'existence du fichier local
-    if not os.path.exists(local_path):
-        print(f"❌ Fichier local introuvable : {local_path}")
-        return False
     
     # Initialisation de Spark
     spark = create_spark_session(key_path)
     
     try:
-        # Lecture des fichiers
+        # Lecture du fichier GCS
         df1 = read_csv_file(spark, gcs_path, "GCS")
         if df1 is None:
             return False
         
+        # Lecture du fichier local
         df2 = read_csv_file(spark, local_path, "local")
         if df2 is None:
             return False
@@ -157,48 +155,123 @@ def load_data():
         total_rows = df.count()
         print(f"📊 Nombre total de lignes fusionnées : {total_rows}")
         
-        # Écriture dans GCS
-        print("💾 Écriture du DataFrame fusionné dans un répertoire temporaire GCS")
-        try:
-            df.coalesce(1) \
-              .write \
-              .option("header", "true") \
-              .mode("overwrite") \
-              .csv(temp_path)
-            print("✅ Fichier temporaire écrit dans GCS")
-        except Exception as e:
-            print(f"❌ Erreur lors de l'écriture dans GCS : {e}")
-            return False
-        
-        # Initialisation du client GCS
-        print("🔐 Initialisation du client GCS")
-        try:
-            client = storage.Client()
-            bucket = client.bucket(bucket_name)
-        except Exception as e:
-            print(f"❌ Erreur lors de l'initialisation du client GCS : {e}")
-            return False
-        
-        # Copie du fichier final
+        return df, spark
+    
+    except Exception as e:
+        print(f"❌ Erreur lors de la fusion des données : {e}")
+        return None, None
+
+    # finally:
+    #     print("🛑 Arrêt de Spark")
+    #     spark.stop()
+
+def save_merged_data(df):
+    """Enregistre le DataFrame fusionné dans GCS"""
+    bucket_name = os.getenv("GCS_BUCKET_NAME")
+    temp_path = f"gs://{bucket_name}/temp/csv_output/"
+    final_path = "movies_recommender.csv"
+    
+    print("💾 Écriture du DataFrame fusionné dans un répertoire temporaire GCS")
+    try:
+        df.coalesce(1) \
+          .write \
+          .option("header", "true") \
+          .mode("overwrite") \
+          .csv(temp_path)
+        print("✅ Fichier temporaire écrit dans GCS")
+
+        client = storage.Client()
+        bucket = client.bucket(bucket_name)
+
         if copy_final_file(bucket, 'temp/csv_output/', final_path):
             print(f"✅ Fichier final sauvegardé sous : gs://{bucket_name}/{final_path}")
-            
-            # Nettoyage des fichiers temporaires
             cleanup_temp_files(bucket, 'temp/csv_output/')
-            
-            print("🎉 Processus terminé avec succès !")
             return True
         else:
+            print("❌ Échec de la copie du fichier final")
             return False
-            
-    except Exception as e:
-        print(f"❌ Erreur inattendue : {e}")
-        return False
     
-    finally:
-        print("🛑 Arrêt de Spark")
-        spark.stop()
+    except Exception as e:
+        print(f"❌ Erreur lors de l'écriture dans GCS : {e}")
 
-if __name__ == "__main__":
-    success = load_data()
-    sys.exit(0 if success else 1)
+def save_cleaned_data(df):
+    """Enregistre le DataFrame nettoyé au format CSV dans GCS (en aplatissant les colonnes Array)"""
+    bucket_name = os.getenv("GCS_BUCKET_NAME")
+    temp_path = f"gs://{bucket_name}/temp/cleaned_csv_output/"
+    final_path = "cleaned_movies_recommender.csv"
+    
+    print("💾 Écriture du DataFrame nettoyé dans un répertoire temporaire GCS")
+
+    try:
+        # 🔄 Aplatir les colonnes de type Array
+        array_cols = [f.name for f in df.schema.fields if f.dataType.simpleString().startswith("array")]
+        for col_name in array_cols:
+            df = df.withColumn(col_name, concat_ws(", ", col(col_name)))
+
+        # 💾 Sauvegarder en CSV dans GCS (temporairement)
+        df.coalesce(1) \
+          .write \
+          .option("header", "true") \
+          .mode("overwrite") \
+          .csv(temp_path)
+        print("✅ Fichier temporaire écrit dans GCS")
+
+        # 📂 Client GCS pour gérer le renommage et nettoyage
+        client = storage.Client()
+        bucket = client.bucket(bucket_name)
+
+        # 📋 Copier le bon fichier CSV généré dans le dossier racine du bucket
+        if copy_final_file(bucket, 'temp/cleaned_csv_output/', final_path):
+            print(f"✅ Fichier final sauvegardé sous : gs://{bucket_name}/{final_path}")
+            cleanup_temp_files(bucket, 'temp/cleaned_csv_output/')
+            return True
+        else:
+            print("❌ Échec de la copie du fichier final")
+            return False
+
+    except Exception as e:
+        print(f"❌ Erreur lors de l'écriture dans GCS : {e}")
+        return False
+
+
+# def save_cleaned_data(df):
+#     """Enregistre le DataFrame nettoyé dans GCS"""
+#     bucket_name = os.getenv("GCS_BUCKET_NAME")
+#     temp_path = f"gs://{bucket_name}/temp/cleaned_csv_output/"
+#     final_path = "cleaned_movies_recommender.csv"
+    
+#     print("💾 Écriture du DataFrame néttoyé dans un répertoire temporaire GCS")
+#     try:
+#         df.coalesce(1) \
+#           .write \
+#           .option("header", "true") \
+#           .mode("overwrite") \
+#           .csv(temp_path)
+#         print("✅ Fichier temporaire écrit dans GCS")
+
+#         client = storage.Client()
+#         bucket = client.bucket(bucket_name)
+
+#         if copy_final_file(bucket, 'temp/csv_output/', final_path):
+#             print(f"✅ Fichier final sauvegardé sous : gs://{bucket_name}/{final_path}")
+#             cleanup_temp_files(bucket, 'temp/cleaned_csv_output/')
+#             return True
+#         else:
+#             print("❌ Échec de la copie du fichier final")
+#             return False
+    
+#     except Exception as e:
+#         print(f"❌ Erreur lors de l'écriture dans GCS : {e}")
+
+
+# def load_data():
+#     df, spark = load_and_merge_data()
+#     if df is not None:
+#         save_merged_data(df)
+#         return df
+#     else:
+#         return None
+
+# if __name__ == "__main__":
+#     success = load_data()
+#     sys.exit(0 if success else 1)
