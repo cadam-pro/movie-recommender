@@ -66,3 +66,34 @@ schema_movie = StructType([
         ])), True)
     ]), True)
 ])
+
+schemaCSV = StructType([
+    StructField("id", IntegerType(), True),
+    StructField("title", StringType(), True),
+    StructField("vote_average", DoubleType(), True),
+    StructField("vote_count", DoubleType(), True),
+    StructField("status", StringType(), True),
+    StructField("release_date", DateType(), True),
+    StructField("revenue", DoubleType(), True),
+    StructField("runtime", DoubleType(), True),
+    StructField("budget", DoubleType(), True),
+    StructField("imdb_id", StringType(), True),
+    StructField("original_language", StringType(), True),
+    StructField("original_title", StringType(), True),
+    StructField("overview", StringType(), True),
+    StructField("popularity", DoubleType(), True),
+    StructField("tagline", StringType(), True),
+    StructField("genres", StringType(), True),
+    StructField("production_companies", StringType(), True),
+    StructField("production_countries", StringType(), True),
+    StructField("spoken_languages", StringType(), True),
+    StructField("cast", StringType(), True),
+    StructField("director", StringType(), True),
+    StructField("director_of_photography", StringType(), True),
+    StructField("writers", StringType(), True),
+    StructField("producers", StringType(), True),
+    StructField("music_composer", StringType(), True),
+    StructField("imdb_rating", DoubleType(), True),
+    StructField("imdb_votes", DoubleType(), True),
+    StructField("poster_path", StringType(), True),
+])
