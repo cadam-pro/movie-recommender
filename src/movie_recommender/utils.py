@@ -17,18 +17,3 @@ def build_spark_session() -> SparkSession:
     print("Spark session created.")
 
     return spark
-
-
-def close_spark_session(spark: SparkSession) -> None:
-    """
-    Close the Spark session.
-
-    Args:
-        spark (SparkSession): The Spark session to close.
-    """
-
-    if spark is not None:
-        spark.stop()
-        print("Spark session closed.")
-    else:
-        print("No Spark session to close.")
