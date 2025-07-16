@@ -2,10 +2,11 @@ import streamlit as st
 import pandas as pd
 import matplotlib.pyplot as plt
 from collections import Counter
-from utils import load_movies
+from utils import load_movies, chunk_movies
 from wordcloud import WordCloud
 
 movies_df = load_movies()
+chunk_df = chunk_movies(movies_df)
 
 st.header("🎬 Top 10 des films les plus populaires du moment")
 top_rated = movies_df.sort_values(by="popularity", ascending=False).head(10)
@@ -33,8 +34,8 @@ films_per_year = movies_df["year"].value_counts().sort_index()
 films_per_year = films_per_year[films_per_year.index <= 2025]
 st.line_chart(films_per_year)
 
-st.header("☁️ Nuage de mots des synopsis")
-text = " ".join(movies_df["overview"].dropna())
+st.header("☁️ Nuage de mots des synopsis pour les 1000 films les plus populaires")
+text = " ".join(chunk_df["overview"].dropna())
 wordcloud = WordCloud(width=800, height=400, background_color="white").generate(text)
 fig, ax = plt.subplots()
 ax.imshow(wordcloud, interpolation="bilinear")

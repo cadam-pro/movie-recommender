@@ -1,6 +1,6 @@
 import json
-from utils import build_spark_session
-from data import load_data, clean_data, prepare_data
+from registry import load_data, save_data
+from data import clean_data, prepare_data
 from pyspark.sql.functions import col
 from pyspark.sql import DataFrame
 from pyspark.sql.functions import udf
@@ -90,10 +90,9 @@ def get_top_recommendations(df: DataFrame, movie_id: int):
 
 
 if __name__ == "__main__":
-    spark = build_spark_session()
-    df = load_data(spark)
+    df = load_data("update")
     df_clean = clean_data(df)
     df_vec = prepare_data(df_clean)
+    save_data(df_vec, "clean", "parquet")
     df_train = train(df_vec, movie_id=62)
     get_top_recommendations(df_train, movie_id=62)
-    spark.stop()

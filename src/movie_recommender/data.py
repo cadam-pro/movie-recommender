@@ -2,7 +2,7 @@
 Load, preprocess, prepare, and save the Movie dataset.
 """
 
-from pyspark.sql import SparkSession, DataFrame
+from pyspark.sql import DataFrame
 from pyspark.sql.functions import col, when, split, array, year, size, row_number
 from pyspark.sql import Window
 from pyspark.ml import Pipeline
@@ -18,31 +18,7 @@ from pyspark.ml.feature import (
 )
 from functools import reduce
 
-from params import DATA_PATH, CHECK_DUPLICATION_FEATURES
-
-
-def load_data(spark: SparkSession) -> DataFrame:
-    """
-    To be completed with Alpha and Clément's code.
-
-    Load the movie dataset.
-
-    Returns:
-        dataframe: A Spark DataFrame containing the movie dataset.
-    """
-    df = spark.read.csv(
-        DATA_PATH,
-        header=True,
-        inferSchema=True,
-        sep=",",
-        quote='"',
-        escape='"',
-        multiLine=True,
-    )
-
-    print("Data loaded successfully.")
-
-    return df
+from params import CHECK_DUPLICATION_FEATURES
 
 
 def add_completeness_score_column(df: DataFrame) -> DataFrame:
@@ -343,15 +319,3 @@ def prepare_data(df: DataFrame) -> DataFrame:
     print("Normalizer created.")
 
     return normalizer.transform(df_vec_assembler)
-
-
-def save_data(df, path):
-    """
-    To be completed with Alpha's code.
-
-    Save the movie dataset to a specified path.
-
-    Args:
-        df: The prepared movie dataset.
-    """
-    pass
