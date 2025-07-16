@@ -13,4 +13,4 @@ uvicorn :
 
 streamlit :
 	@echo "Running streamlit server..."
-	streamlit run webapp/app.py
+	streamlit run webapp/Movie_Recommender.py
