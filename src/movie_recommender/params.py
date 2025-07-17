@@ -1,4 +1,5 @@
 CHECK_DUPLICATION_FEATURES = ["release_date", "overview"]
+JSON_PATH = "data/recommendations.json"
 
 
 API_KEY = "fb24501dcc147d8b2a12ae4312215c55"

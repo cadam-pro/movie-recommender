@@ -1,6 +1,5 @@
-import json
 from registry import load_data, save_data
-from data import clean_data, prepare_data
+from data import clean_data, prepare_data, save_json_data
 from pyspark.sql.functions import col
 from pyspark.sql import DataFrame
 from pyspark.sql.functions import udf
@@ -82,10 +81,12 @@ def get_top_recommendations(df: DataFrame, movie_id: int):
     )
     print("Get the newest movie recommended")
 
+    save_json_data(movie_id, popular, underground, newest)
+
     return {
-        "popular": json.dumps(popular, default=str),
-        "underground": json.dumps(underground, default=str),
-        "newest": json.dumps(newest, default=str),
+        "popular": popular,
+        "underground": underground,
+        "newest": newest,
     }
 
 

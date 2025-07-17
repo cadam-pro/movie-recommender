@@ -1,6 +1,5 @@
 import streamlit as st
 import requests
-import json
 from utils import load_movies, chunk_movies
 
 st.set_page_config(layout="wide")
@@ -32,7 +31,7 @@ if selected_title != "--- Sélectionne un film ---":
 
             # --- Fonction d'affichage des infos ---
             def display_movie(movie_json_str, label):
-                data = json.loads(movie_json_str)
+                data = movie_json_str
                 st.subheader(label + f" : {data['title']}")
                 cols = st.columns([1, 2])
                 with cols[0]:
