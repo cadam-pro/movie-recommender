@@ -231,8 +231,6 @@ def associate_imdb_rating(df_new_movies) -> DataFrame:
     imdb_df = imdb_df.withColumnRenamed("tconst", "imdb_id")
     imdb_df = imdb_df.withColumnRenamed("averageRating", "imdb_rating")
     imdb_df = imdb_df.withColumnRenamed("numVotes", "imdb_votes")
-
-    print(imdb_df.show())
     df_new_movies_with_imdb_rating = df_new_movies.join(imdb_df, how='left', on="imdb_id")
     df_new_movies_with_imdb_rating = df_new_movies_with_imdb_rating.withColumn("release_date", df_new_movies_with_imdb_rating["release_date"].try_cast('date'))
     return df_new_movies_with_imdb_rating
@@ -255,37 +253,4 @@ def map_movies(data):
     movieDF = movieDF.withColumn("music_composer", map_crewUDF(sf.to_json(movieDF.credits), lit(["Original Music Composer"])))
     movieDF = movieDF.withColumn("cast", map_castUDF(sf.to_json(movieDF.credits)))
     movieDF = movieDF.drop("credits")
-    print(movieDF.count())
     return movieDF
-
-def principal_methode():
-    #step 1
-    load_dotenv()
-    key_path = os.getenv("GOOGLE_APPLICATION_CREDENTIALS")
-    SparkSessionSingleton.initialize(key_path)
-    today = date.today()
-    yesterday = today - timedelta(days=1)
-    today_str = today.strftime("%m_%d_%Y")
-    yesterday_str = yesterday.strftime("%m_%d_%Y")
-
-    #step 2
-    df_update = retrieve_updates()
-    save_data(df_update, "update")
-
-    #step 3
-    #new_movies_ids = list_new_movies_ids(today_str, yesterday_str)
-    #df_new_movies = map_movies(get_movies(new_movies_ids))
-    #df_new_movies_with_imdb_rating = associate_imdb_rating(df_new_movies)
-    #save_data(df_new_movies_with_imdb_rating, "news")
-
-    #step 4
-    #df_movie = load_data("data")
-    #df_update = load_data("update")
-    #df_new_movies_with_imdb_rating = load_data("news")
-    #df_movie_with_update = apply_update(df_movie, df_update)
-    #final_df_updated_and_with_new_movies = df_movie_with_update.unionByName(df_new_movies_with_imdb_rating)
-    #save_data(final_df_updated_and_with_new_movies, "data")
-    
-
-#principal_methode()
-#sys.exit()

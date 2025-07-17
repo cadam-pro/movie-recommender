@@ -74,11 +74,9 @@ def cleanup_temp_files(temp_prefix):
     bucket_name = os.getenv("GCS_BUCKET_NAME")
     client = storage.Client()
     bucket = client.bucket(bucket_name)
-    print("TEEEEEESSSST")
     try:
         blobs = list(bucket.list_blobs(prefix=temp_prefix))
         for blob in blobs:
-            print(blob)
             blob.delete()
         print(f"✅ {len(blobs)} fichiers temporaires supprimés")
     except Exception as e:
@@ -111,7 +109,7 @@ def copy_final_file(temp_prefix, final_path):
         print(f"❌ Erreur lors de la copie du fichier final : {e}")
         return False
 
-def load_data(folder=""):
+def load_data(folder="", format="csv"):
     """Fonction principale pour charger et fusionner les données"""
     key_path = os.getenv("GOOGLE_APPLICATION_CREDENTIALS")
     SparkSessionSingleton.initialize(key_path)
@@ -137,7 +135,6 @@ def load_data(folder=""):
             else read_csv_file(gcs_path, "GCS")
         )
         if df1 is None:
-            print("test")
             return False
         return df1
     except Exception as e:

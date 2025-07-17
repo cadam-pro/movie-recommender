@@ -6,7 +6,7 @@ from datetime import date, timedelta, datetime
 import os
 
 def init_spark_session():
-    from src.movie_recommender.SparkSessionSingleton import SparkSessionSingleton
+    from SparkSessionSingleton import SparkSessionSingleton
     load_dotenv()
     key_path = os.getenv("GOOGLE_APPLICATION_CREDENTIALS")
     SparkSessionSingleton.initialize(key_path)
@@ -20,8 +20,8 @@ with DAG(
 
     @task()
     def get_update():
-        from src.movie_recommender.registry import save_data
-        from src.movie_recommender.updater import retrieve_updates
+        from registry import save_data
+        from updater import retrieve_updates
         init_spark_session()
         df_update = retrieve_updates()
         save_data(df_update, "update")
@@ -30,8 +30,8 @@ with DAG(
     @task()
     def get_new_movies():
     #step 3
-        from src.movie_recommender.registry import save_data
-        from src.movie_recommender.updater import list_new_movies_ids, map_movies, get_movies, associate_imdb_rating
+        from registry import save_data
+        from updater import list_new_movies_ids, map_movies, get_movies, associate_imdb_rating
         init_spark_session()
         today = date.today()
         yesterday = today - timedelta(days=1)
@@ -46,8 +46,8 @@ with DAG(
     @task()
     def merge_update():
     #step 4
-        from src.movie_recommender.registry import save_data, load_data, copy_final_file
-        from src.movie_recommender.updater import apply_update, clean_dataframe
+        from registry import save_data, load_data, copy_final_file
+        from updater import apply_update, clean_dataframe
         init_spark_session()
         df_movie = load_data("data")
         df_update = load_data("update")
@@ -55,8 +55,9 @@ with DAG(
         df_movie_with_update = clean_dataframe(apply_update(df_movie, df_update))
         final_df_updated_and_with_new_movies = df_movie_with_update.unionByName(clean_dataframe(df_new_movies_with_imdb_rating))
         save_data(clean_dataframe(final_df_updated_and_with_new_movies), "tmp")
-        copy_final_file("tmp", "data/")
+        copy_final_file("tmp", "data")
+
     merge = merge_update()
 
 
-merge
+update >> new_movies >> merge

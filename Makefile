@@ -14,3 +14,10 @@ uvicorn :
 streamlit :
 	@echo "Running streamlit server..."
 	streamlit run webapp/Movie_Recommender.py
+
+airflow:
+	export PYTHONPATH=src/movie_recommender  ;\
+	export PYTHONPATH=src  ;\
+	export AIRFLOW__CORE__LOAD_EXAMPLES=False \
+	export AIRFLOW_HOME=$(pwd)/.airflow
+	airflow standalone
