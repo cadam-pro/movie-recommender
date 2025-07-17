@@ -85,7 +85,6 @@ def cleanup_temp_files(temp_prefix):
         print(f"⚠️ Erreur lors du nettoyage : {e}")
 
 
-<<<<<<< HEAD
 def copy_final_file(temp_prefix, final_path):
     """Copie le fichier final depuis le dossier temporaire"""
     print("🔍 Recherche du fichier CSV généré dans le dossier temporaire")
@@ -113,9 +112,6 @@ def copy_final_file(temp_prefix, final_path):
         return False
 
 def load_data(folder=""):
-=======
-def load_data(folder="", format="csv"):
->>>>>>> 3bc5cd84b0a51f5be778260731101120bec7e28a
     """Fonction principale pour charger et fusionner les données"""
     key_path = os.getenv("GOOGLE_APPLICATION_CREDENTIALS")
     SparkSessionSingleton.initialize(key_path)
