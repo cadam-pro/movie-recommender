@@ -68,7 +68,7 @@ def clean_dataframe(df: DataFrame):
 def get_last_movies_change():
    id_movies = []
    # page max 500 : api limitation to page 500
-   for page in range(1, 2):
+   for page in range(1, 500):
       data = call_api(CHANGE_URL, {
         "page": page
       })
