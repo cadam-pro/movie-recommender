@@ -1,22 +1,12 @@
 import streamlit as st
-import pandas as pd
 import requests
-import json
+from utils import load_movies, chunk_movies
 
 st.set_page_config(layout="wide")
 st.title("🎬 Recommandation de films")
 
-
-# --- Chargement des films ---
-@st.cache_data
-def load_movies():
-    df = pd.read_csv(
-        "data/TMDB_all_movies.csv", usecols=["id", "title"]
-    )  # Adapte le nom du fichier
-    return df
-
-
-movies_df = load_movies()
+df = load_movies()
+movies_df = chunk_movies(df)
 
 movie_titles = ["--- Sélectionne un film ---"] + movies_df["title"].tolist()
 
@@ -38,11 +28,10 @@ if selected_title != "--- Sélectionne un film ---":
         )
         if response.status_code == 200:
             movie = response.json()
-            print(movie)
 
             # --- Fonction d'affichage des infos ---
             def display_movie(movie_json_str, label):
-                data = json.loads(movie_json_str)
+                data = movie_json_str
                 st.subheader(label + f" : {data['title']}")
                 cols = st.columns([1, 2])
                 with cols[0]:
