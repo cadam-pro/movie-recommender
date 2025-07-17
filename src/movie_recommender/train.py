@@ -1,6 +1,10 @@
 import json
-from utils import build_spark_session
-from data import load_data, clean_data, prepare_data
+# from utils import build_spark_session
+from src.movie_recommender.utils import build_spark_session
+
+# from data import load_data, clean_data, prepare_data
+from src.movie_recommender.data import load_data, clean_data, prepare_data
+
 from pyspark.sql.functions import col
 from pyspark.sql import DataFrame
 from pyspark.sql.functions import udf

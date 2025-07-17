@@ -1,11 +1,20 @@
+import os
 import streamlit as st
 import pandas as pd
 import requests
 import json
+from dotenv import load_dotenv
 
 st.set_page_config(layout="wide")
 st.title("🎬 Recommandation de films")
 
+# --- Chargement des variables d'environnement ---
+load_dotenv()
+
+# Utiliser une variable d'environnement avec une valeur par défaut
+API_BASE_URL = os.getenv('API_BASE_URL')
+
+print(f"API_BASE_URL: {API_BASE_URL}")
 
 # --- Chargement des films ---
 @st.cache_data
@@ -33,9 +42,11 @@ if selected_title != "--- Sélectionne un film ---":
         movie_id = selected_row.iloc[0]["id"]
 
         # --- Appel à l'API ---
-        response = requests.get(
-            f"http://127.0.0.1:8000/recommendations?movie_id={movie_id}"
-        )
+        response = requests.get(f"{API_BASE_URL}/recommendations", params={"movie_id": movie_id})
+
+        # response = requests.get(
+        #     f"http://backend:8000/recommendations?movie_id={movie_id}"
+        # )
         if response.status_code == 200:
             movie = response.json()
             print(movie)

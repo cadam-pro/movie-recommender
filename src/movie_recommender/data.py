@@ -18,7 +18,8 @@ from pyspark.ml.feature import (
 )
 from functools import reduce
 
-from params import DATA_PATH, CHECK_DUPLICATION_FEATURES
+# from params import DATA_PATH, CHECK_DUPLICATION_FEATURES
+from src.movie_recommender.params import DATA_PATH, CHECK_DUPLICATION_FEATURES
 
 
 def load_data(spark: SparkSession) -> DataFrame:

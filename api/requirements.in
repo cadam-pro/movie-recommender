@@ -1,0 +1,14 @@
+fastapi
+google-cloud-storage
+uvicorn
+numpy
+pandas
+scikit-learn
+requests
+umap-learn
+plotly
+pyspark
+kaggle
+pytest
+dotenv
+

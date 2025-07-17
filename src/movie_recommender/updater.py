@@ -21,14 +21,16 @@ import kaggle
 import time
 from dotenv import load_dotenv
 from pyspark.sql import DataFrame
-from params import API_KEY, CSV_PATH_LOAD, CHANGE_URL, GET_MOVIE_URL, URL_IMDB, CSV_PATH_SAVE
-from registry import load_data, save_data, cleanup_temp_files
-from mapper_movie import map_cast, map_crew, update_cast, update_crew, update_genre, update_production_company, update_release_date, update_tagline
-from session_updater import call_api
-from http_requester import get_update, get_tmdb_movie_ids, get_movie, get_imdb_rating
+# from params import API_KEY, CSV_PATH_LOAD, CHANGE_URL, GET_MOVIE_URL, URL_IMDB, CSV_PATH_SAVE
+from src.movie_recommender.params import API_KEY, CSV_PATH_LOAD, CHANGE_URL, GET_MOVIE_URL, URL_IMDB, CSV_PATH_SAVE
+# from registry import load_data, save_data, cleanup_temp_files
+from src.movie_recommender.registry import load_data, save_data, cleanup_temp_files
+from src.movie_recommender.mapper_movie import map_cast, map_crew, update_cast, update_crew, update_genre, update_production_company, update_release_date, update_tagline
+from src.movie_recommender.session_updater import call_api
+from src.movie_recommender.http_requester import get_update, get_tmdb_movie_ids, get_movie, get_imdb_rating
 from pyspark.sql.types import StringType
-from http_requester import get_credit
-from schema import schema_movie, schemaCSV
+from src.movie_recommender.http_requester import get_credit
+from src.movie_recommender.schema import schema_movie, schemaCSV
 import os
 
 

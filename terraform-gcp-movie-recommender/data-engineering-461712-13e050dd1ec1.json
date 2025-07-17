@@ -1,0 +1,13 @@
+{
+  "type": "service_account",
+  "project_id": "data-engineering-461712",
+  "private_key_id": "13e050dd1ec1e939e49dfdedb99f7bcd9102b32c",
+  "private_key": "-----BEGIN PRIVATE KEY-----\nMIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQC6PI9GjFAweBH+\nW53/5sMg7EUrfXo7zH2c+vBkgtm85Hat5aj9ToFtkxa6ExQEFjF2kmKrbbCsH/sX\nFJ2YSGg212OByaj4f59dVma/lT6ftkDRKMujx5PZcfl2CMVrOMIqT7Iwpt+npwzg\n5WGPsP4fqQJesIoChseLg5/h9TA3ACOzvQeSX+4olEpOOYZdJKraiIAtJhoCjCra\nvgTleSYG1f/E7XKoQZVBum63SMFxrjH0HfFP93L7AHyppwlZj6GuUuuW6TnKPD+N\nRy/VWSJ5tna7aC3mvethvYg3RHSxoIVFaE9IbEjMTDkp8YkOvpO5v1XVZad9qF0S\nKhR/qOYvAgMBAAECggEANvrU42Nd8wknart6WAc0mN4Xh4DKGqhCdxr/5/RXOnQJ\n80mHC4znGcWgInuqX5B7tsD9fxVpYE8qrcQoyEGr/nC00CaMCxyGHCR7Pdjd/YFs\n/jJ4d9fd9oY2uplZSs+dRqdzd/hzs4dV/njJRgXe59LZv8GHZLqMY0wO4cKkIsAX\nG5+1K7EjL+GKoKvGxbAhBNdoPjM9O9RW2dTXP6HTWlwcfMbN8wX6XfK50DuL5Hv8\ngmVdHHGxlpr9kxhYunbRHNKk8sr3XWd2NYKalObb/sHl8Db3fkYnykMa6HcqXWuZ\npvpLwA+e1ZWmi/SP1rxS2vcoTTLoibY7hSDXG+1/hQKBgQDopxfJzQ62xzHBh7dL\njurjW96oh2041Qvx+iH3DtM28a7LunhAbsF9381tl8x806WrX3MpBeaaEJ5zVRTa\nR30WRtfD4rxzAj/5Tz8aBAkXMtsZE17Pe5w6xXsuOJH1VVpGuht5NqnNRX6lUrpY\n99RJk75UmDNipbNsLSv7+D9XrQKBgQDM7QYxS2xDdD5fOaHaq9Z+GwsHKTFDKE50\nlvdTPS+mRCcNmrL6gh3mhNYcMF7zmx4IrRuTZfDhD/QKAQippsNMieSuSLpoBjJN\n8Yqskp8qDVjHnu84Yy8bIGRk+DuMAkDKuecfCZIszv7MMWoejAbURSoUPdyd+iuc\nemt47nPgywKBgDRMO2C1o7UameizJVTqz4pEQI0JxFeeLI08eR4cSwZy1aQeSqHR\nQ9WT1Y3pLaJxwTAAyNZT6T6Atd2fJozavReg3Se/dDU2MENOuRSUC6cXW4ELhaiG\nVNwxQDtnpAfOI/j6JOreitUF5i4rppARRbs0ZviFLifir66FiPmfGD4RAoGBAKNZ\n2VLYDW/jrIhZt3RJAAy739mQc21WJtv3LyWSI3aE4yCMDVl0+QK1JruHr1i+cH14\nCABCBXZSMjT7R/18KjfLv5dR8A1VyymofeM8aVWrF/bf8U7geT9FXeHCoizj6uPu\ntpZeGcBQLHl2dmHtOtBgZb+G5GKldbghOaRHZ+VrAoGATiBjZUFOu/d9O0MxfkNW\nBSEM4ZVsHKwHzwjzIYNhOSApUok+tKjnkxsJvqD7hl72qEWQbM8BoKiOPSMjvbaq\nyeUmtLjJ9I04jzbDmDm0r3Dk2wvsmGUZKWMXnAZ+xJQcH472hYlADlK1tqrCDrqY\np3qgwbTh8MM40687Wuwep4w=\n-----END PRIVATE KEY-----\n",
+  "client_email": "artefact-de-sa-alniang@data-engineering-461712.iam.gserviceaccount.com",
+  "client_id": "100471864139670434197",
+  "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+  "token_uri": "https://oauth2.googleapis.com/token",
+  "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+  "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/artefact-de-sa-alniang%40data-engineering-461712.iam.gserviceaccount.com",
+  "universe_domain": "googleapis.com"
+}
