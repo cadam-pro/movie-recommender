@@ -7,10 +7,6 @@ from src.movie_recommender.data import (
 from pyspark.sql.types import StructType, StructField, StringType
 
 
-def test_load_data():
-    pass
-
-
 @pytest.fixture(scope="module")
 def spark():
     return SparkSession.builder.master("local[1]").appName("Test").getOrCreate()

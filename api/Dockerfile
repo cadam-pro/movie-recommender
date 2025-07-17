@@ -23,6 +23,6 @@ RUN pip install --no-cache-dir -r requirements.in
 # EXPOSE 8000
 COPY . .
 
-ENV PYTHONPATH=/app
+ENV PYTHONPATH=/app/src/movie_recommender
 # Commande de lancement de l'API (à adapter selon ton app)
 CMD ["uvicorn", "api.webapi:mr_api", "--host", "0.0.0.0", "--port", "8000"]

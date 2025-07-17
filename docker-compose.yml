@@ -10,6 +10,9 @@ services:
       - "8000:8000"  # adapter selon ton API
     volumes:
       - ./data:/app/data
+    environment:
+      - GCS_BUCKET_NAME=movie-recommender-batch-062
+      - GOOGLE_APPLICATION_CREDENTIALS=keys/data-engineering-461712-13e050dd1ec1.json
 
   frontend:
     build:

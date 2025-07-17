@@ -4,7 +4,7 @@ provider "google" {
 }
 
 resource "google_storage_bucket" "projet_groupe_bucket" {
-  name     = "movie-recommender-batch-062-test"   # doit être unique globalement
+  name     = "movie-recommender-batch-062"   # doit être unique globalement
   location = "EU"
   force_destroy = true
 }

@@ -11,4 +11,8 @@ pyspark
 kaggle
 pytest
 dotenv
+ruff
+pre-commit
+pytest
+
 
