@@ -1,10 +1,10 @@
 import json
-from utils import build_spark_session
-from data import load_data, clean_data, prepare_data
 from pyspark.sql.functions import col
 from pyspark.sql import DataFrame
 from pyspark.sql.functions import udf
 from pyspark.sql.types import DoubleType
+from utils import build_spark_session
+from data import load_data, clean_data, prepare_data
 
 
 def train(df: DataFrame, movie_id: int) -> DataFrame:

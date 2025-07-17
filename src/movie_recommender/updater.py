@@ -3,37 +3,32 @@
 
 # !pip install requests pandas scikit-learn umap-learn plotly numpy pyspark kaggle
 
-
 ## IMPORT
-import sys
-from pyspark.sql import SparkSession
 from pyspark.sql.functions import expr, lit, col, when, count, coalesce, udf, to_date, date_format
 import pyspark.sql.functions as sf
-from pyspark.errors import PySparkValueError
 from requests import HTTPError
-from datetime import date, timedelta, datetime
+from datetime import date, timedelta
 import gzip
 from io import BytesIO
 import json
-from SparkSessionSingleton import SparkSessionSingleton
 import shutil
 import kaggle
 import time
 from dotenv import load_dotenv
+from pyspark.sql.types import StringType
 from pyspark.sql import DataFrame
-from params import API_KEY, CSV_PATH_LOAD, CHANGE_URL, GET_MOVIE_URL, URL_IMDB, CSV_PATH_SAVE
-from registry import load_data, save_data, cleanup_temp_files
+import os
+from params import CSV_PATH_LOAD, CHANGE_URL, URL_IMDB
+from registry import save_data
 from mapper_movie import map_cast, map_crew, update_cast, update_crew, update_genre, update_production_company, update_release_date, update_tagline
 from session_updater import call_api
 from http_requester import get_update, get_tmdb_movie_ids, get_movie, get_imdb_rating
-from pyspark.sql.types import StringType
 from http_requester import get_credit
 from schema import schema_movie, schemaCSV
-import os
+from SparkSessionSingleton import SparkSessionSingleton
 
 
 ##RETRIEVE CSV FROM KAGGLE
-print("retrieve file kaggle")
 #kaggle.api.authenticate()
 #kaggle.api.dataset_download_files("alanvourch/tmdb-movies-daily-updates", path=DEST_FILE, unzip=True)
 
@@ -52,6 +47,17 @@ def load_data_local():
     return df
 
 
+def clean_dataframe(df: DataFrame):
+    df = df.withColumn("id", df["id"].try_cast('int'))
+    df = df.withColumn("vote_average", df["vote_average"].try_cast('double'))
+    df = df.withColumn("vote_count", df["vote_count"].try_cast('double'))
+    df = df.withColumn("revenue", df["revenue"].try_cast('double'))
+    df = df.withColumn("runtime", df["runtime"].try_cast('double'))
+    df = df.withColumn("budget", df["budget"].try_cast('double'))
+    df = df.withColumn("popularity", df["popularity"].try_cast('double'))
+    df = df.withColumn("imdb_rating", df["imdb_rating"].try_cast('double'))
+    df = df.withColumn("imdb_votes", df["imdb_votes"].try_cast('double'))
+    return df
 
             ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -  ###
             ### - - - - - - - - - - - - - - - - - - MOVIE UPDATE - - - - - - - - - - - - - - - - - - ###
@@ -62,7 +68,7 @@ def load_data_local():
 def get_last_movies_change():
    id_movies = []
    # page max 500 : api limitation to page 500
-   for page in range(1, 5):
+   for page in range(1, 2):
       data = call_api(CHANGE_URL, {
         "page": page
       })
@@ -148,6 +154,8 @@ def prepare_update(to_update_ids_list):
 
 ### - - - - - - APPLY UPDATE - - - - - - ###
 def apply_update(df_movies, update_df):
+    df_movies = clean_dataframe(df_movies)
+    update_df = clean_dataframe(update_df)
     joined = df_movies.alias("a").join(update_df.alias("b"), on="id", how="left")
 
     columns = [c for c in df_movies.columns if c != "id"]
@@ -251,7 +259,6 @@ def map_movies(data):
     return movieDF
 
 def principal_methode():
-
     #step 1
     load_dotenv()
     key_path = os.getenv("GOOGLE_APPLICATION_CREDENTIALS")
@@ -266,22 +273,19 @@ def principal_methode():
     save_data(df_update, "update")
 
     #step 3
-    new_movies_ids = list_new_movies_ids(today_str, yesterday_str)
-    df_new_movies = map_movies(get_movies(new_movies_ids))
-    df_new_movies_with_imdb_rating = associate_imdb_rating(df_new_movies)
-    save_data(df_new_movies_with_imdb_rating, "news")
+    #new_movies_ids = list_new_movies_ids(today_str, yesterday_str)
+    #df_new_movies = map_movies(get_movies(new_movies_ids))
+    #df_new_movies_with_imdb_rating = associate_imdb_rating(df_new_movies)
+    #save_data(df_new_movies_with_imdb_rating, "news")
 
     #step 4
-    df_movie = load_data("data")
-    df_update = load_data("update")
-    df_new_movies_with_imdb_rating = load_data("news")
-    df_movie_with_update = apply_update(df_movie, df_update)
-    final_df_updated_and_with_new_movies = df_movie_with_update.unionByName(df_new_movies_with_imdb_rating)
-    save_data(final_df_updated_and_with_new_movies, "data")
+    #df_movie = load_data("data")
+    #df_update = load_data("update")
+    #df_new_movies_with_imdb_rating = load_data("news")
+    #df_movie_with_update = apply_update(df_movie, df_update)
+    #final_df_updated_and_with_new_movies = df_movie_with_update.unionByName(df_new_movies_with_imdb_rating)
+    #save_data(final_df_updated_and_with_new_movies, "data")
     
 
-principal_methode()
-sys.exit()
-
-print("Write New CSV")
-
+#principal_methode()
+#sys.exit()

@@ -1,13 +1,9 @@
 #!/usr/bin/env python
 
 import os
-import sys
 from dotenv import load_dotenv
-from pyspark.sql import SparkSession
 from google.cloud import storage
-from pyspark.sql.types import StringType
 from pyspark.sql.functions import col
-from SparkSessionSingleton import SparkSessionSingleton
 
 spark = None
 
@@ -54,14 +50,42 @@ def cleanup_temp_files(temp_prefix):
     bucket_name = os.getenv("GCS_BUCKET_NAME")
     client = storage.Client()
     bucket = client.bucket(bucket_name)
+    print("TEEEEEESSSST")
     try:
         blobs = list(bucket.list_blobs(prefix=temp_prefix))
         for blob in blobs:
+            print(blob)
             blob.delete()
         print(f"✅ {len(blobs)} fichiers temporaires supprimés")
     except Exception as e:
         print(f"⚠️ Erreur lors du nettoyage : {e}")
 
+
+def copy_final_file(temp_prefix, final_path):
+    """Copie le fichier final depuis le dossier temporaire"""
+    print("🔍 Recherche du fichier CSV généré dans le dossier temporaire")
+    bucket_name = os.getenv("GCS_BUCKET_NAME")
+    client = storage.Client()
+    bucket = client.bucket(bucket_name)
+    cleanup_temp_files(final_path)
+    try:
+        blobs = list(bucket.list_blobs(prefix=temp_prefix))
+        csv_blob = next((blob for blob in blobs if blob.name.endswith('.csv')), None)
+        
+        if csv_blob:
+            print(f"✅ Fichier CSV généré trouvé : {csv_blob.name}")
+            print(f"📁 Copie vers : {final_path}")
+            print(f"📁 Copie vers : {bucket}")
+            file_name = csv_blob.name.split("/")[1]
+            final_name = f"{final_path}/{file_name}"
+            bucket.copy_blob(csv_blob, bucket, final_name)
+            return True
+        else:
+            print("❌ Aucun fichier .csv trouvé dans le dossier temporaire")
+            return False
+    except Exception as e:
+        print(f"❌ Erreur lors de la copie du fichier final : {e}")
+        return False
 
 def load_data(folder=""):
     """Fonction principale pour charger et fusionner les données"""
