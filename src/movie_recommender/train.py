@@ -1,5 +1,4 @@
-from registry import load_data, save_data
-from data import clean_data, prepare_data, save_json_data
+from data import save_json_data
 from pyspark.sql.functions import col
 from pyspark.sql import DataFrame
 from pyspark.sql.functions import udf
@@ -43,7 +42,7 @@ def train(df: DataFrame, movie_id: int) -> DataFrame:
     return df_with_similarity
 
 
-def get_top_recommendations(df: DataFrame, movie_id: int):
+def get_top_recommendations(df: DataFrame, movie_id: int, data):
     """
     Get the movie recommendations based on cosine similarity.
     Args:
@@ -81,19 +80,10 @@ def get_top_recommendations(df: DataFrame, movie_id: int):
     )
     print("Get the newest movie recommended")
 
-    save_json_data(movie_id, popular, underground, newest)
+    save_json_data(data, movie_id, popular, underground, newest)
 
     return {
         "popular": popular,
         "underground": underground,
         "newest": newest,
     }
-
-
-if __name__ == "__main__":
-    df = load_data("update")
-    df_clean = clean_data(df)
-    df_vec = prepare_data(df_clean)
-    save_data(df_vec, "clean", "parquet")
-    df_train = train(df_vec, movie_id=62)
-    get_top_recommendations(df_train, movie_id=62)

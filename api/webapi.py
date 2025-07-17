@@ -1,9 +1,6 @@
 from fastapi import FastAPI
-from src.movie_recommender.params import JSON_PATH
-from src.movie_recommender.registry import load_data
+from src.movie_recommender.registry import load_data, load_json_from_gcs
 from src.movie_recommender.train import get_top_recommendations, train
-import json
-import os
 
 mr_api = FastAPI(
     title="Movie Recommender API",
@@ -20,24 +17,20 @@ def read_root():
 
 
 @mr_api.get("/recommendations")
-def get_recommendations_by_jsonmmendations(movie_id: int):
-    if recommendations := get_recommendations_by_json(movie_id):
+def get_recommendations(movie_id: int):
+    data = load_json_from_gcs()
+    if recommendations := get_recommendations_by_json(movie_id, data):
         return {"recommendations": recommendations}
 
     df_vec = load_data("clean", "parquet")
     df_train = train(df_vec, movie_id)
-    get_top_recommendations(df_train, movie_id)
+    get_top_recommendations(df_train, movie_id, data)
 
-    recommendations = get_recommendations_by_json(movie_id)
+    data = load_json_from_gcs()
+    recommendations = get_recommendations_by_json(movie_id, data)
 
     return {"recommendations": recommendations}
 
 
-def get_recommendations_by_json(movie_id, filename=JSON_PATH):
-    if not os.path.exists(filename):
-        return None
-
-    with open(filename, "r", encoding="utf-8") as f:
-        data = json.load(f)
-
+def get_recommendations_by_json(movie_id, data):
     return data.get(str(movie_id))

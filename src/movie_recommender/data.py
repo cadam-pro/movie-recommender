@@ -2,6 +2,7 @@
 Load, preprocess, prepare, and save the Movie dataset.
 """
 
+from registry import save_json_to_gcs
 from pyspark.sql import DataFrame
 from pyspark.sql.functions import col, when, split, array, year, size, row_number
 from pyspark.sql import Window
@@ -17,10 +18,8 @@ from pyspark.ml.feature import (
     Normalizer,
 )
 from functools import reduce
-import os
-import json
 
-from params import CHECK_DUPLICATION_FEATURES, JSON_PATH
+from params import CHECK_DUPLICATION_FEATURES
 
 
 def add_completeness_score_column(df: DataFrame) -> DataFrame:
@@ -323,23 +322,13 @@ def prepare_data(df: DataFrame) -> DataFrame:
     return normalizer.transform(df_vec_assembler)
 
 
-def save_json_data(movie_id, popular, underground, newest, filename=JSON_PATH):
-    # Charger ou initialiser le dictionnaire
-    if os.path.exists(filename):
-        with open(filename, "r", encoding="utf-8") as f:
-            data = json.load(f)
-    else:
-        data = {}
-
+def save_json_data(data, movie_id, popular, underground, newest):
     # Ajouter ou mettre à jour les données pour movie_id
     data[str(movie_id)] = {
         "popular": popular,
         "underground": underground,
         "newest": newest,
     }
-
     # Sauvegarder dans le fichier JSON
-    with open(filename, "w", encoding="utf-8") as f:
-        json.dump(data, f, ensure_ascii=False, indent=2, default=str)
-
+    save_json_to_gcs(data)
     print("data saved")

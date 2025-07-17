@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 import os
+import json
 from dotenv import load_dotenv
 from google.cloud import storage
 from SparkSessionSingleton import SparkSessionSingleton
@@ -94,7 +95,7 @@ def load_data(folder="", format="csv"):
         return False
 
     bucket_name = os.getenv("GCS_BUCKET_NAME")
-    source_blob = "*.parquet" if format == "parquet" else "*.csv"
+    source_blob = f"*.{format}"
 
     # Définition des chemins
     gcs_path = f"gs://{bucket_name}/{folder}/{source_blob}"
@@ -137,4 +138,46 @@ def save_data(df, folder, format="csv"):
         return False
     except Exception as e:
         print(f"❌ Erreur inattendue : {e}")
+        return False
+
+
+def load_json_from_gcs():
+    """Charge un fichier JSON depuis Google Cloud Storage."""
+    try:
+        client = storage.Client()
+        bucket_name = os.getenv("GCS_BUCKET_NAME")
+        bucket = client.bucket(bucket_name)
+
+        # Définition des chemins
+        file_path = "json/recommendations.json"
+        blob = bucket.blob(file_path)
+
+        if not blob.exists():
+            print(f"❌ Le fichier json n'existe pas dans le bucket {bucket_name}.")
+            return {}
+
+        content = blob.download_as_text()
+        return json.loads(content)
+    except Exception as e:
+        print(f"❌ Erreur lors du chargement du JSON depuis GCS : {e}")
+        return None
+
+
+def save_json_to_gcs(data):
+    """Écrit un dictionnaire Python dans un fichier JSON sur Google Cloud Storage."""
+    try:
+        client = storage.Client()
+        bucket_name = os.getenv("GCS_BUCKET_NAME")
+        bucket = client.bucket(bucket_name)
+
+        # Définition des chemins
+        file_path = "json/recommendations.json"
+        blob = bucket.blob(file_path)
+
+        json_data = json.dumps(data, ensure_ascii=False, indent=2, default=str)
+        blob.upload_from_string(json_data, content_type="application/json")
+
+        print(f"✅ Fichier JSON sauvegardé sur gs://{bucket_name}/json/*.json")
+    except Exception as e:
+        print(f"❌ Erreur lors de l'enregistrement du JSON sur GCS : {e}")
         return False
