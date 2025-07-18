@@ -1,6 +1,5 @@
 from session_updater import session, call_api
-from params import API_KEY, CSV_PATH_LOAD, CHANGE_URL, \
-        CREDIT_URL, MOVIE_CHANGE_URL, MOVIE_IDS_FILE_URL, GET_MOVIE_URL, URL_IMDB, CSV_PATH_SAVE
+from params import API_KEY, CREDIT_URL, MOVIE_CHANGE_URL, MOVIE_IDS_FILE_URL, GET_MOVIE_URL, URL_IMDB
 
 def get_update(movie_id):
     url = MOVIE_CHANGE_URL.format(movie_id=movie_id, API_KEY=API_KEY)

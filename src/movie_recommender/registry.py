@@ -1,9 +1,10 @@
 #!/usr/bin/env python
 
 import os
-import json
 from dotenv import load_dotenv
 from google.cloud import storage
+from pyspark.sql.functions import col
+import json
 from SparkSessionSingleton import SparkSessionSingleton
 
 spark = None
@@ -82,6 +83,32 @@ def cleanup_temp_files(temp_prefix):
         print(f"⚠️ Erreur lors du nettoyage : {e}")
 
 
+def copy_final_file(temp_prefix, final_path):
+    """Copie le fichier final depuis le dossier temporaire"""
+    print("🔍 Recherche du fichier CSV généré dans le dossier temporaire")
+    bucket_name = os.getenv("GCS_BUCKET_NAME")
+    client = storage.Client()
+    bucket = client.bucket(bucket_name)
+    cleanup_temp_files(final_path)
+    try:
+        blobs = list(bucket.list_blobs(prefix=temp_prefix))
+        csv_blob = next((blob for blob in blobs if blob.name.endswith('.csv')), None)
+        
+        if csv_blob:
+            print(f"✅ Fichier CSV généré trouvé : {csv_blob.name}")
+            print(f"📁 Copie vers : {final_path}")
+            print(f"📁 Copie vers : {bucket}")
+            file_name = csv_blob.name.split("/")[1]
+            final_name = f"{final_path}/{file_name}"
+            bucket.copy_blob(csv_blob, bucket, final_name)
+            return True
+        else:
+            print("❌ Aucun fichier .csv trouvé dans le dossier temporaire")
+            return False
+    except Exception as e:
+        print(f"❌ Erreur lors de la copie du fichier final : {e}")
+        return False
+
 def load_data(folder="", format="csv"):
     """Fonction principale pour charger et fusionner les données"""
     key_path = os.getenv("GOOGLE_APPLICATION_CREDENTIALS")
@@ -108,7 +135,6 @@ def load_data(folder="", format="csv"):
             else read_csv_file(gcs_path, "GCS")
         )
         if df1 is None:
-            print("test")
             return False
         return df1
     except Exception as e:

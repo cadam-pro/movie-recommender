@@ -1,7 +1,7 @@
 from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
-from params import BASE_URL, API_KEY
 import requests
+from params import BASE_URL, API_KEY
 
 retry_strategy = Retry(
         total=1,
